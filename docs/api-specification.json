@@ -1,0 +1,582 @@
+{
+  "commands": {
+    "moderation": {
+      "warn": {
+        "name": "warn",
+        "description": "Issue a warning to a user",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to warn",
+            "type": "USER",
+            "required": true
+          },
+          {
+            "name": "reason",
+            "description": "Reason for the warning",
+            "type": "STRING",
+            "required": true,
+            "min_length": 5,
+            "max_length": 500
+          },
+          {
+            "name": "silent",
+            "description": "Don't notify the user",
+            "type": "BOOLEAN",
+            "required": false
+          }
+        ],
+        "default_member_permissions": "MANAGE_MESSAGES",
+        "dm_permission": false,
+        "response_example": {
+          "embeds": [
+            {
+              "title": "User Warned — Case #142",
+              "description": "**Target:** @bad_user (1234567890)\n**Moderator:** @mod (987654321)\n**Reason:** Posting NSFW links in #general\n**Case ID:** 142",
+              "color": 15158332,
+              "timestamp": "2025-09-15T12:34:56Z",
+              "footer": {
+                "text": "Aegis Moderation System"
+              }
+            }
+          ],
+          "ephemeral": true
+        }
+      },
+      "mute": {
+        "name": "mute",
+        "description": "Temporarily mute a user",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to mute",
+            "type": "USER",
+            "required": true
+          },
+          {
+            "name": "duration",
+            "description": "Duration (e.g., 1h, 30m, 1d)",
+            "type": "STRING",
+            "required": true
+          },
+          {
+            "name": "reason",
+            "description": "Reason for the mute",
+            "type": "STRING",
+            "required": true,
+            "min_length": 5,
+            "max_length": 500
+          },
+          {
+            "name": "silent",
+            "description": "Don't notify the user",
+            "type": "BOOLEAN",
+            "required": false
+          }
+        ],
+        "default_member_permissions": "MODERATE_MEMBERS",
+        "dm_permission": false
+      },
+      "ban": {
+        "name": "ban",
+        "description": "Ban a user from the server",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to ban",
+            "type": "USER",
+            "required": true
+          },
+          {
+            "name": "reason",
+            "description": "Reason for the ban",
+            "type": "STRING",
+            "required": true,
+            "min_length": 5,
+            "max_length": 500
+          },
+          {
+            "name": "delete_messages",
+            "description": "Delete messages from last X days",
+            "type": "INTEGER",
+            "required": false,
+            "min_value": 0,
+            "max_value": 7
+          },
+          {
+            "name": "duration",
+            "description": "Temporary ban duration (e.g., 7d, 30d)",
+            "type": "STRING",
+            "required": false
+          }
+        ],
+        "default_member_permissions": "BAN_MEMBERS",
+        "dm_permission": false
+      },
+      "case": {
+        "name": "case",
+        "description": "View or manage moderation cases",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "view",
+            "description": "View a specific case",
+            "type": "SUB_COMMAND",
+            "options": [
+              {
+                "name": "case_id",
+                "description": "Case ID to view",
+                "type": "INTEGER",
+                "required": true,
+                "min_value": 1
+              }
+            ]
+          },
+          {
+            "name": "search",
+            "description": "Search cases by user",
+            "type": "SUB_COMMAND",
+            "options": [
+              {
+                "name": "user",
+                "description": "User to search cases for",
+                "type": "USER",
+                "required": true
+              },
+              {
+                "name": "action",
+                "description": "Filter by action type",
+                "type": "STRING",
+                "required": false,
+                "choices": [
+                  {"name": "Warn", "value": "warn"},
+                  {"name": "Mute", "value": "mute"},
+                  {"name": "Ban", "value": "ban"},
+                  {"name": "Kick", "value": "kick"}
+                ]
+              }
+            ]
+          },
+          {
+            "name": "edit",
+            "description": "Edit case reason",
+            "type": "SUB_COMMAND",
+            "options": [
+              {
+                "name": "case_id",
+                "description": "Case ID to edit",
+                "type": "INTEGER",
+                "required": true,
+                "min_value": 1
+              },
+              {
+                "name": "reason",
+                "description": "New reason",
+                "type": "STRING",
+                "required": true,
+                "min_length": 5,
+                "max_length": 500
+              }
+            ]
+          }
+        ],
+        "default_member_permissions": "MANAGE_MESSAGES",
+        "dm_permission": false
+      }
+    },
+    "tickets": {
+      "create": {
+        "name": "ticket",
+        "description": "Create a support ticket",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "category",
+            "description": "Ticket category",
+            "type": "STRING",
+            "required": false,
+            "choices": [
+              {"name": "General Support", "value": "general"},
+              {"name": "Technical Issue", "value": "technical"},
+              {"name": "Report User", "value": "report"},
+              {"name": "Appeal", "value": "appeal"},
+              {"name": "Partnership", "value": "partnership"}
+            ]
+          },
+          {
+            "name": "subject",
+            "description": "Brief description of your issue",
+            "type": "STRING",
+            "required": false,
+            "max_length": 100
+          }
+        ],
+        "dm_permission": false,
+        "response_example": {
+          "content": "Ticket created: <#1234567890> — A staff member will be with you shortly.",
+          "ephemeral": true
+        }
+      }
+    },
+    "settings": {
+      "set": {
+        "name": "settings",
+        "description": "Configure bot settings",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "automod",
+            "description": "Configure automod settings",
+            "type": "SUB_COMMAND_GROUP",
+            "options": [
+              {
+                "name": "profanity",
+                "description": "Configure profanity filter",
+                "type": "SUB_COMMAND",
+                "options": [
+                  {
+                    "name": "enabled",
+                    "description": "Enable profanity filter",
+                    "type": "BOOLEAN",
+                    "required": true
+                  },
+                  {
+                    "name": "action",
+                    "description": "Action to take",
+                    "type": "STRING",
+                    "required": false,
+                    "choices": [
+                      {"name": "Delete", "value": "delete"},
+                      {"name": "Warn", "value": "warn"},
+                      {"name": "Mute", "value": "mute"}
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "spam",
+                "description": "Configure spam protection",
+                "type": "SUB_COMMAND",
+                "options": [
+                  {
+                    "name": "enabled",
+                    "description": "Enable spam protection",
+                    "type": "BOOLEAN",
+                    "required": true
+                  },
+                  {
+                    "name": "threshold",
+                    "description": "Messages per 10 seconds",
+                    "type": "INTEGER",
+                    "required": false,
+                    "min_value": 3,
+                    "max_value": 20
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "moderation",
+            "description": "Configure moderation settings",
+            "type": "SUB_COMMAND_GROUP",
+            "options": [
+              {
+                "name": "log_channel",
+                "description": "Set moderation log channel",
+                "type": "SUB_COMMAND",
+                "options": [
+                  {
+                    "name": "channel",
+                    "description": "Channel for moderation logs",
+                    "type": "CHANNEL",
+                    "required": true,
+                    "channel_types": ["GUILD_TEXT"]
+                  }
+                ]
+              },
+              {
+                "name": "mute_role",
+                "description": "Set muted role",
+                "type": "SUB_COMMAND",
+                "options": [
+                  {
+                    "name": "role",
+                    "description": "Role to assign when muting users",
+                    "type": "ROLE",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "default_member_permissions": "MANAGE_GUILD",
+        "dm_permission": false
+      }
+    },
+    "utility": {
+      "help": {
+        "name": "help",
+        "description": "Show bot help and commands",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "command",
+            "description": "Get help for a specific command",
+            "type": "STRING",
+            "required": false,
+            "autocomplete": true
+          }
+        ],
+        "dm_permission": true
+      },
+      "info": {
+        "name": "info",
+        "description": "Show bot information and statistics",
+        "type": "CHAT_INPUT",
+        "options": [
+          {
+            "name": "type",
+            "description": "Information type",
+            "type": "STRING",
+            "required": false,
+            "choices": [
+              {"name": "Bot Stats", "value": "bot"},
+              {"name": "Server Stats", "value": "server"},
+              {"name": "User Stats", "value": "user"}
+            ]
+          }
+        ],
+        "dm_permission": true
+      }
+    }
+  },
+  "context_menus": {
+    "moderation": {
+      "user_info": {
+        "name": "User Info",
+        "type": "USER",
+        "default_member_permissions": "MANAGE_MESSAGES",
+        "dm_permission": false
+      },
+      "ban_user": {
+        "name": "Quick Ban",
+        "type": "USER",
+        "default_member_permissions": "BAN_MEMBERS",
+        "dm_permission": false
+      },
+      "warn_user": {
+        "name": "Quick Warn",
+        "type": "USER",
+        "default_member_permissions": "MANAGE_MESSAGES",
+        "dm_permission": false
+      }
+    },
+    "utility": {
+      "report_message": {
+        "name": "Report Message",
+        "type": "MESSAGE",
+        "dm_permission": false
+      }
+    }
+  },
+  "buttons": {
+    "tickets": {
+      "claim": {
+        "custom_id": "ticket_claim_{ticket_id}",
+        "style": "PRIMARY",
+        "label": "Claim",
+        "emoji": "👤"
+      },
+      "close": {
+        "custom_id": "ticket_close_{ticket_id}",
+        "style": "DANGER",
+        "label": "Close",
+        "emoji": "🔒"
+      },
+      "transcript": {
+        "custom_id": "ticket_transcript_{ticket_id}",
+        "style": "SECONDARY",
+        "label": "Transcript",
+        "emoji": "📄"
+      }
+    },
+    "moderation": {
+      "appeal": {
+        "custom_id": "appeal_case_{case_id}",
+        "style": "SECONDARY",
+        "label": "Appeal",
+        "emoji": "⚖️"
+      },
+      "confirm_ban": {
+        "custom_id": "confirm_ban_{user_id}",
+        "style": "DANGER",
+        "label": "Confirm Ban",
+        "emoji": "🔨"
+      },
+      "cancel_action": {
+        "custom_id": "cancel_action",
+        "style": "SECONDARY",
+        "label": "Cancel",
+        "emoji": "❌"
+      }
+    }
+  },
+  "modals": {
+    "tickets": {
+      "create_detailed": {
+        "custom_id": "ticket_create_detailed",
+        "title": "Create Support Ticket",
+        "components": [
+          {
+            "type": "ACTION_ROW",
+            "components": [
+              {
+                "type": "TEXT_INPUT",
+                "custom_id": "subject",
+                "label": "Subject",
+                "style": "SHORT",
+                "placeholder": "Brief description of your issue",
+                "required": true,
+                "max_length": 100
+              }
+            ]
+          },
+          {
+            "type": "ACTION_ROW",
+            "components": [
+              {
+                "type": "TEXT_INPUT",
+                "custom_id": "description",
+                "label": "Description",
+                "style": "PARAGRAPH",
+                "placeholder": "Please provide detailed information about your issue...",
+                "required": true,
+                "max_length": 1000
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "moderation": {
+      "warn_reason": {
+        "custom_id": "warn_reason_{user_id}",
+        "title": "Warn User",
+        "components": [
+          {
+            "type": "ACTION_ROW",
+            "components": [
+              {
+                "type": "TEXT_INPUT",
+                "custom_id": "reason",
+                "label": "Reason",
+                "style": "PARAGRAPH",
+                "placeholder": "Provide a detailed reason for this warning...",
+                "required": true,
+                "min_length": 5,
+                "max_length": 500
+              }
+            ]
+          }
+        ]
+      },
+      "appeal_form": {
+        "custom_id": "appeal_form_{case_id}",
+        "title": "Appeal Moderation Action",
+        "components": [
+          {
+            "type": "ACTION_ROW",
+            "components": [
+              {
+                "type": "TEXT_INPUT",
+                "custom_id": "appeal_reason",
+                "label": "Why should this action be reversed?",
+                "style": "PARAGRAPH",
+                "placeholder": "Explain why you believe this moderation action was incorrect...",
+                "required": true,
+                "max_length": 1000
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "select_menus": {
+    "settings": {
+      "automod_actions": {
+        "custom_id": "automod_actions_{setting}",
+        "placeholder": "Select automod action...",
+        "options": [
+          {
+            "label": "Delete Message",
+            "value": "delete",
+            "description": "Delete the offending message",
+            "emoji": "🗑️"
+          },
+          {
+            "label": "Warn User",
+            "value": "warn",
+            "description": "Issue a warning to the user",
+            "emoji": "⚠️"
+          },
+          {
+            "label": "Temporary Mute",
+            "value": "mute",
+            "description": "Temporarily mute the user",
+            "emoji": "🔇"
+          },
+          {
+            "label": "Kick User",
+            "value": "kick",
+            "description": "Kick the user from the server",
+            "emoji": "👢"
+          }
+        ]
+      }
+    },
+    "tickets": {
+      "department_select": {
+        "custom_id": "ticket_department",
+        "placeholder": "Select a department...",
+        "options": [
+          {
+            "label": "General Support",
+            "value": "general",
+            "description": "General questions and support",
+            "emoji": "❓"
+          },
+          {
+            "label": "Technical Issues",
+            "value": "technical",
+            "description": "Bot bugs and technical problems",
+            "emoji": "🔧"
+          },
+          {
+            "label": "User Reports",
+            "value": "reports",
+            "description": "Report rule violations",
+            "emoji": "🚨"
+          },
+          {
+            "label": "Appeals",
+            "value": "appeals",
+            "description": "Appeal moderation actions",
+            "emoji": "⚖️"
+          },
+          {
+            "label": "Partnerships",
+            "value": "partnerships",
+            "description": "Business partnerships and collaborations",
+            "emoji": "🤝"
+          }
+        ]
+      }
+    }
+  }
+}
