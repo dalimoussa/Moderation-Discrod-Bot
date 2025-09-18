@@ -25,12 +25,26 @@ export class CommandHandler {
           const commandFiles = await fs.readdir(folderPath);
           
           for (const file of commandFiles) {
-            if (file.endsWith('.ts') || file.endsWith('.js')) {
+            // Only load .js files in production, .ts files in development
+            const isProduction = process.env.NODE_ENV === 'production';
+            const validExtension = isProduction ? file.endsWith('.js') : file.endsWith('.ts');
+            
+            // Skip declaration files
+            if (file.endsWith('.d.ts')) continue;
+            
+            if (validExtension) {
               const filePath = join(folderPath, file);
               
               try {
-                const fileUrl = pathToFileURL(filePath).href;
-                const commandModule = await import(fileUrl);
+                // Use require for production (CommonJS) and import for development
+                let commandModule: any;
+                if (process.env.NODE_ENV === 'production') {
+                  commandModule = require(filePath);
+                } else {
+                  const fileUrl = pathToFileURL(filePath).href;
+                  commandModule = await import(fileUrl);
+                }
+                
                 const command: Command = commandModule.default || commandModule;
                 
                 if (this.isValidCommand(command)) {

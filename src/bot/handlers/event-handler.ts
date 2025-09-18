@@ -18,12 +18,26 @@ export class EventHandler {
       const eventFiles = await fs.readdir(eventsPath);
 
       for (const file of eventFiles) {
-        if (file.endsWith('.ts') || file.endsWith('.js')) {
+        // Only load .js files in production, .ts files in development
+        const isProduction = process.env.NODE_ENV === 'production';
+        const validExtension = isProduction ? file.endsWith('.js') : file.endsWith('.ts');
+        
+        // Skip declaration files
+        if (file.endsWith('.d.ts')) continue;
+        
+        if (validExtension) {
           const filePath = join(eventsPath, file);
           
           try {
-            const fileUrl = pathToFileURL(filePath).href;
-            const eventModule = await import(fileUrl);
+            // Use require for production (CommonJS) and import for development
+            let eventModule: any;
+            if (process.env.NODE_ENV === 'production') {
+              eventModule = require(filePath);
+            } else {
+              const fileUrl = pathToFileURL(filePath).href;
+              eventModule = await import(fileUrl);
+            }
+            
             const event: Event = eventModule.default || eventModule;
             
             if (this.isValidEvent(event)) {

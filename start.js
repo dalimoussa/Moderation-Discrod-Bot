@@ -29,10 +29,22 @@ if (!fs.existsSync(tsconfigPath)) {
 
 console.log('✅ Found tsconfig.json, setting up path resolution...');
 
-// Register tsconfig-paths
-require('tsconfig-paths/register');
+// Register tsconfig-paths with custom base URL pointing to dist folder
+const { register } = require('tsconfig-paths');
 
-console.log('✅ Path resolution configured, starting bot...');
+// Register path mapping for compiled output
+register({
+  baseUrl: './dist',
+  paths: {
+    '@/*': ['./*'],
+    '@/bot/*': ['./bot/*'],
+    '@/api/*': ['./api/*'],
+    '@/shared/*': ['./shared/*'],
+    '@/database/*': ['./database/*']
+  }
+});
+
+console.log('✅ Path resolution configured for dist folder, starting bot...');
 
 // Check environment variables
 console.log('🔍 Environment check:');
