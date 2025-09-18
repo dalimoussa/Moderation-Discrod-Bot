@@ -44,6 +44,7 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/knexfile.js ./knexfile.js
 COPY start.js ./
+COPY migrate-and-start.js ./
 
 # Create logs directory and change ownership of all files
 RUN mkdir -p logs && \
@@ -52,9 +53,10 @@ RUN mkdir -p logs && \
 # Switch to non-root user
 USER aegis
 
-# Expose port
-EXPOSE 3000
+# Health check (optional)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD pgrep -f "node" || exit 1
 
-# Start application
+# Start application with migrations
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "start.js"]
+CMD ["node", "migrate-and-start.js"]
