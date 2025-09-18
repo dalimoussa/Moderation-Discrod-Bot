@@ -7,8 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (including devDependencies for TypeScript)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY src/ ./src/
@@ -28,17 +28,15 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy built application
+# Copy package files and install only production dependencies
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
 COPY --from=builder --chown=aegis:nodejs /app/dist ./dist
-COPY --from=builder --chown=aegis:nodejs /app/node_modules ./node_modules
-COPY --chown=aegis:nodejs package*.json ./
 
 # Create logs directory
 RUN mkdir -p logs && chown aegis:nodejs logs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node dist/health-check.js || exit 1
 
 # Switch to non-root user
 USER aegis
@@ -48,4 +46,4 @@ EXPOSE 3000
 
 # Start application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "-r", "tsconfig-paths/register", "dist/index.js"]
