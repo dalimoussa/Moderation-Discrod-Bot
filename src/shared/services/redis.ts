@@ -6,8 +6,14 @@ export class RedisService {
   
   async initialize(): Promise<void> {
     try {
+      // Skip Redis initialization if no URL is provided
+      if (!process.env.REDIS_URL) {
+        logger.info('No REDIS_URL provided, skipping Redis initialization');
+        return;
+      }
+
       const redisOptions: any = {
-        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        url: process.env.REDIS_URL,
         database: parseInt(process.env.REDIS_DB || '0'),
         socket: {
           reconnectStrategy: (retries: number) => {
@@ -45,11 +51,12 @@ export class RedisService {
     }
   }
 
-  get connection(): RedisClientType {
-    if (!this.client) {
-      throw new Error('Redis not initialized');
-    }
+  get connection(): RedisClientType | null {
     return this.client;
+  }
+
+  isConnected(): boolean {
+    return !!this.client;
   }
 
   async destroy(): Promise<void> {
@@ -57,12 +64,17 @@ export class RedisService {
       await this.client.quit();
       this.client = null;
       logger.info('Redis connection closed');
+    } else {
+      logger.info('Redis was not initialized, nothing to destroy');
     }
   }
 
   async healthCheck(): Promise<boolean> {
     try {
-      if (!this.client) return false;
+      if (!this.client) {
+        logger.info('Redis not initialized, health check skipped');
+        return true; // Return true since Redis is optional
+      }
       const result = await this.client.ping();
       return result === 'PONG';
     } catch (error) {
@@ -74,7 +86,11 @@ export class RedisService {
   // Cache utilities
   async get<T>(key: string): Promise<T | null> {
     try {
-      const value = await this.connection.get(key);
+      if (!this.client) {
+        logger.debug(`Redis not available, skipping get for key: ${key}`);
+        return null;
+      }
+      const value = await this.client.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
       logger.error(`Failed to get key ${key}:`, error);
@@ -84,11 +100,15 @@ export class RedisService {
 
   async set<T>(key: string, value: T, ttl?: number): Promise<boolean> {
     try {
+      if (!this.client) {
+        logger.debug(`Redis not available, skipping set for key: ${key}`);
+        return false;
+      }
       const serialized = JSON.stringify(value);
       if (ttl) {
-        await this.connection.setEx(key, ttl, serialized);
+        await this.client.setEx(key, ttl, serialized);
       } else {
-        await this.connection.set(key, serialized);
+        await this.client.set(key, serialized);
       }
       return true;
     } catch (error) {
@@ -99,7 +119,11 @@ export class RedisService {
 
   async del(key: string): Promise<boolean> {
     try {
-      await this.connection.del(key);
+      if (!this.client) {
+        logger.debug(`Redis not available, skipping delete for key: ${key}`);
+        return false;
+      }
+      await this.client.del(key);
       return true;
     } catch (error) {
       logger.error(`Failed to delete key ${key}:`, error);
@@ -109,7 +133,11 @@ export class RedisService {
 
   async exists(key: string): Promise<boolean> {
     try {
-      const result = await this.connection.exists(key);
+      if (!this.client) {
+        logger.debug(`Redis not available, skipping exists check for key: ${key}`);
+        return false;
+      }
+      const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
       logger.error(`Failed to check existence of key ${key}:`, error);
@@ -120,10 +148,15 @@ export class RedisService {
   // Rate limiting utilities
   async checkRateLimit(key: string, limit: number, window: number): Promise<{ allowed: boolean; count: number; resetTime: number }> {
     try {
+      if (!this.client) {
+        logger.debug(`Redis not available, allowing rate limit for key: ${key}`);
+        return { allowed: true, count: 0, resetTime: Date.now() + window * 1000 };
+      }
+
       const now = Date.now();
       const windowStart = now - window * 1000;
       
-      const multi = this.connection.multi();
+      const multi = this.client.multi();
       multi.zRemRangeByScore(key, 0, windowStart);
       multi.zAdd(key, { score: now, value: now.toString() });
       multi.zCard(key);
