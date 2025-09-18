@@ -1,22 +1,45 @@
 #!/usr/bin/env node
 
 const { spawn } = require('child_process');
-const path = require('path');
+const Knex = require('knex');
+const config = require('./knexfile.js');
 
 console.log('🚀 Starting Aegis Discord Bot with database migration...');
 
-// Run migrations first
-console.log('📊 Running database migrations...');
-const migrate = spawn('node', ['node_modules/knex/bin/cli.js', 'migrate:latest'], {
-  stdio: 'inherit',
-  cwd: process.cwd()
-});
-
-migrate.on('close', (code) => {
-  if (code === 0) {
-    console.log('✅ Database migrations completed successfully');
+async function runMigrations() {
+  console.log('📊 Running database migrations...');
+  
+  try {
+    const environment = process.env.NODE_ENV || 'production';
+    const knexConfig = config[environment];
     
-    // Start the bot
+    console.log(`🔧 Using environment: ${environment}`);
+    console.log(`📍 Migration directory: ${knexConfig.migrations.directory}`);
+    
+    const knex = Knex(knexConfig);
+    
+    // Run migrations
+    const [batchNo, log] = await knex.migrate.latest();
+    
+    if (log.length === 0) {
+      console.log('✅ Database is already up to date');
+    } else {
+      console.log(`✅ Ran ${log.length} migrations:`);
+      log.forEach(file => console.log(`  - ${file}`));
+    }
+    
+    await knex.destroy();
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message);
+    return false;
+  }
+}
+
+// Run migrations and then start bot
+runMigrations().then((success) => {
+  if (success) {
     console.log('🤖 Starting Discord bot...');
     const bot = spawn('node', ['start.js'], {
       stdio: 'inherit',
@@ -32,12 +55,9 @@ migrate.on('close', (code) => {
     });
     
   } else {
-    console.error('❌ Database migration failed with code:', code);
     process.exit(1);
   }
-});
-
-migrate.on('error', (err) => {
-  console.error('❌ Failed to start migration process:', err);
+}).catch((error) => {
+  console.error('❌ Failed to run migrations:', error);
   process.exit(1);
 });
