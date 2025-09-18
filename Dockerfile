@@ -28,18 +28,20 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy package files and install only production dependencies
+# Copy package files and tsconfig.json FIRST (before changing ownership)
 COPY package*.json ./
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+
+# Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy tsconfig.json for tsconfig-paths runtime resolution
-COPY --from=builder --chown=aegis:nodejs /app/tsconfig.json ./
+# Copy built application and bootstrap script from builder stage
+COPY --from=builder /app/dist ./dist
+COPY start.js ./
 
-# Copy built application from builder stage
-COPY --from=builder --chown=aegis:nodejs /app/dist ./dist
-
-# Create logs directory
-RUN mkdir -p logs && chown aegis:nodejs logs
+# Create logs directory and change ownership of all files
+RUN mkdir -p logs && \
+    chown -R aegis:nodejs /app
 
 # Switch to non-root user
 USER aegis
@@ -49,4 +51,4 @@ EXPOSE 3000
 
 # Start application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "-r", "tsconfig-paths/register", "dist/index.js"]
+CMD ["node", "start.js"]
