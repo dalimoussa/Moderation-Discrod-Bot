@@ -28,13 +28,13 @@
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@/bot/*": ["bot/*"],
-      "@/api/*": ["api/*"],
-      "@/shared/*": ["shared/*"],
-      "@/database/*": ["database/*"]
+      "@/*": ["src/*"],
+      "@/bot/*": ["src/bot/*"],
+      "@/api/*": ["src/api/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@/database/*": ["src/database/*"]
     }
   },
   "include": ["src/**/*"],

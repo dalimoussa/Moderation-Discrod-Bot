@@ -32,6 +32,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
+# Copy tsconfig.json for tsconfig-paths runtime resolution
+COPY --from=builder --chown=aegis:nodejs /app/tsconfig.json ./
+
 # Copy built application from builder stage
 COPY --from=builder --chown=aegis:nodejs /app/dist ./dist
 
