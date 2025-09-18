@@ -50,11 +50,11 @@ var config = {
             max: 20
         },
         migrations: {
-            directory: './dist/database/migrations',
+            directory: './migrations',
             extension: 'js'
         },
         seeds: {
-            directory: './dist/database/seeds',
+            directory: './seeds',
             extension: 'js'
         }
     }

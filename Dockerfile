@@ -7,6 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY knexfile.ts ./
+COPY migrations/ ./migrations/
 
 # Install ALL dependencies (including devDependencies for TypeScript)
 RUN npm ci && npm cache clean --force
@@ -43,6 +44,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application and bootstrap script from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/knexfile.js ./knexfile.js
+COPY --from=builder /app/migrations ./migrations
 COPY start.js ./
 COPY migrate-and-start.js ./
 
